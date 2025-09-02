@@ -1,0 +1,217 @@
+#include <iostream>
+#include <string>
+#include <stack>
+#include <iomanip>
+using namespace std;
+
+struct Book {
+    int id;
+    string title;
+    string author;
+    bool available;
+    Book * next;
+};
+
+class Library {
+private:
+    Book * head;
+
+    stack <string> actionStack;
+
+public:
+    Library() : head(NULL) {}
+
+    void addBook(int id, string title, string author) {
+        Book* newBook = new Book{id, title, author, true, head};
+        head = newBook;
+        cout << "Book added: " << title << " by " << author << endl;
+    }
+
+    void displayBooks() {
+        if (!head) {
+            cout << "No books in library.\n";
+            return;
+        }
+
+        cout << "\n---------------------- Library Books ----------------------\n";
+        cout << left << setw(6) << "ID"
+             << setw(25) << "Title"
+             << setw(20) << "Author"
+             << setw(12) << "Status" << endl;
+        cout << "-----------------------------------------------------------\n";
+
+        Book * temp = head;
+        while (temp) {
+            cout << left << setw(6) << temp -> id
+                 << setw(25) << temp -> title
+                 << setw(20) << temp -> author
+                 << setw(12) << (temp -> available ? "Available" : "Borrowed")
+                 << endl;
+            temp = temp->next;
+        }
+        cout << "-----------------------------------------------------------\n";
+    }
+
+    void borrowBook(int id) {
+        Book * temp = head;
+        while (temp) {
+            if (temp -> id == id) {
+                if (temp -> available) {
+                    temp -> available = false;
+                    cout << "\n✅ Borrowed Book:\n";
+                    cout << left << setw(6) << "ID"
+                         << setw(25) << "Title"
+                         << setw(20) << "Author"
+                         << setw(12) << "Status" << endl;
+                    cout << "-----------------------------------------------------------\n";
+                    cout << left << setw(6) << temp->id
+                         << setw(25) << temp->title
+                         << setw(20) << temp->author
+                         << setw(12) << "Borrowed" << endl;
+                    actionStack.push("RETURN " + to_string(id));
+                } 
+                else {
+                    cout << "Book already borrowed.\n";
+                }
+                return;
+            }
+            temp = temp -> next;
+        }
+        cout << "Book not found.\n";
+    }
+
+    void returnBook(int id) {
+        Book * temp = head;
+        while (temp) {
+            if (temp -> id == id) {
+                if (!temp -> available) {
+                    temp -> available = true;
+                    cout << "\n✅ Returned Book:\n";
+                    cout << left << setw(6) << "ID"
+                         << setw(25) << "Title"
+                         << setw(20) << "Author"
+                         << setw(12) << "Status" << endl;
+                    cout << "-----------------------------------------------------------\n";
+                    cout << left << setw(6) << temp->id
+                         << setw(25) << temp -> title
+                         << setw(20) << temp -> author
+                         << setw(12) << "Available" << endl;
+                    actionStack.push("BORROW " + to_string(id));
+                } 
+                else {
+                    cout << "Book was not borrowed.\n";
+                }
+                return;
+            }
+            temp = temp -> next;
+        }
+        cout << "Book not found.\n";
+    }
+
+    void undo() {
+        if (actionStack.empty()) {
+            cout << "No actions to undo.\n";
+            return;
+        }
+
+        string lastAction = actionStack.top();
+        actionStack.pop();
+
+        string command = lastAction.substr(0, lastAction.find(" "));
+        int id = stoi(lastAction.substr(lastAction.find(" ") + 1));
+
+        if (command == "RETURN"){
+            returnBook(id);
+        }
+        else if (command == "BORROW"){
+            borrowBook(id);
+        }
+    }
+
+    void search(string keyword) {
+        Book * temp = head;
+        bool found = false;
+
+        cout << "\n🔍 Search results for: " << keyword << endl;
+        cout << left << setw(6) << "ID"
+             << setw(25) << "Title"
+             << setw(20) << "Author"
+             << setw(12) << "Status" << endl;
+        cout << "-----------------------------------------------------------\n";
+
+        while (temp) {
+            if (temp -> title.find(keyword) != string::npos || 
+                temp -> author.find(keyword) != string::npos) {
+                cout << left << setw(6) << temp -> id
+                     << setw(25) << temp -> title
+                     << setw(20) << temp -> author
+                     << setw(12) << (temp -> available ? "Available" : "Borrowed")
+                     << endl;
+                found = true;
+            }
+            temp = temp -> next;
+        }
+
+        if (!found) cout << "No books found.\n";
+        cout << "-----------------------------------------------------------\n";
+    }
+};
+
+int main() {
+    Library lib;
+    int choice, id;
+    string title, author, keyword;
+
+    do {
+        cout << "\n===== E-Library Book Management =====\n";
+        cout << "1. Add Book\n2. Display Books\n3. Borrow Book\n4. Return Book\n5. Undo Last Action\n6. Search\n0. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter Book ID: "; cin >> id;
+                cin.ignore();
+                cout << "Enter Title: "; getline(cin, title);
+                cout << "Enter Author: "; getline(cin, author);
+                lib.addBook(id, title, author);
+                break;
+
+            case 2:
+                lib.displayBooks();
+                break;
+
+            case 3:
+                cout << "Enter Book ID to borrow: "; 
+                cin >> id;
+                lib.borrowBook(id);
+                break;
+
+            case 4:
+                cout << "Enter Book ID to return: "; 
+                cin >> id;
+                lib.returnBook(id);
+                break;
+
+            case 5:
+                lib.undo();
+                break;
+
+            case 6:
+                cin.ignore();
+                cout << "Enter keyword (title/author): ";
+                getline(cin, keyword);
+                lib.search(keyword);
+                break;
+
+            case 0:
+                cout << "Exiting... Goodbye!\n";
+                break;
+
+            default:
+                cout << "Invalid choice.\n";
+        }
+    } 
+    while (choice != 0);
+        return 0;
+}
