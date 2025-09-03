@@ -1,0 +1,212 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+struct Contact {
+    string name;
+    string phone;
+    Contact * next;
+};
+
+class ContactBook {
+private:
+    Contact * head;
+
+    string toLower(const string& str) {
+        string lower;
+        for (char ch : str) lower += tolower(ch);
+        return lower;
+    }
+
+public:
+    ContactBook() : head(nullptr) {
+        loadFromFile();
+    }
+
+    ~ContactBook() {
+        saveToFile();
+        while (head) {
+            Contact * temp = head;
+            head = head -> next;
+            delete temp;
+        }
+    }
+
+    void addContact(const string& name, const string& phone) {
+        Contact * newContact = new Contact{name, phone, nullptr};
+
+        if (!head || toLower(name) < toLower(head -> name)) {
+            newContact -> next = head;
+            head = newContact;
+        } else {
+            Contact * current = head;
+            while (current -> next && toLower(current -> next -> name) < toLower(name)) {
+                current = current -> next;
+            }
+            newContact -> next = current -> next;
+            current -> next = newContact;
+        }
+        cout << "✅ Contact added.\n";
+    }
+
+    void searchContact(const string& name) {
+        Contact * current = head;
+        while (current) {
+            if (toLower(current -> name) == toLower(name)) {
+                cout << "🔍 Found: " << current -> name << " - " << current -> phone << "\n";
+                return;
+            }
+            current = current -> next;
+        }
+        cout << "❌ Contact not found.\n";
+    }
+
+    void updateContact(const string& name, const string& newPhone) {
+        Contact * current = head;
+        while (current) {
+            if (toLower(current -> name) == toLower(name)) {
+                current -> phone = newPhone;
+                cout << "✏️ Contact updated.\n";
+                return;
+            }
+            current = current -> next;
+        }
+        cout << "❌ Contact not found.\n";
+    }
+
+    void deleteContact(const string& name) {
+        if (!head) {
+            return;
+        }
+        
+        if (toLower(head->name) == toLower(name)) {
+            Contact * temp = head;
+            head = head -> next;
+            delete temp;
+            cout << "🗑️ Contact deleted.\n";
+            return;
+        }
+
+        Contact * current = head;
+        while (current -> next && toLower(current -> next -> name) != toLower(name)) {
+            current = current -> next;
+        }
+
+        if (current -> next) {
+            Contact * temp = current -> next;
+            current -> next = temp -> next;
+            delete temp;
+            cout << "🗑️ Contact deleted.\n";
+        } 
+        else {
+            cout << "❌ Contact not found.\n";
+        }
+    }
+
+    void displayContacts() {
+        int nameWidth, phoneWidth;
+        cout << "\n📐 Customize Table Layout:\n";
+        cout << "Enter column width for Name: ";
+        cin >> nameWidth;
+        cout << "Enter column width for Phone: ";
+        cin >> phoneWidth;
+
+        Contact * current = head;
+        cout << "\n📒 Contact List:\n";
+        cout << "+" << string(nameWidth + 2, '-') << "+" << string(phoneWidth + 2, '-') << "+\n";
+        cout << "| " << setw(nameWidth) << left << "Name"
+             << " | " << setw(phoneWidth) << left << "Phone" << " |\n";
+        cout << "+" << string(nameWidth + 2, '-') << "+" << string(phoneWidth + 2, '-') << "+\n";
+
+        while (current) {
+            cout << "| " << setw(nameWidth) << left << current -> name
+                 << " | " << setw(phoneWidth) << left << current -> phone << " |\n";
+            current = current -> next;
+        }
+
+        cout << "+" << string(nameWidth + 2, '-') << "+" << string(phoneWidth + 2, '-') << "+\n";
+    }
+
+    void saveToFile() {
+        ofstream file("contacts.txt");
+        Contact * current = head;
+        while (current) {
+            file << current -> name << "," << current -> phone << "\n";
+            current = current -> next;
+        }
+        file.close();
+    }
+
+    void loadFromFile() {
+        ifstream file("contacts.txt");
+        string line;
+        while (getline(file, line)) {
+            size_t comma = line.find(',');
+            if (comma != string::npos) {
+                string name = line.substr(0, comma);
+                string phone = line.substr(comma + 1);
+                addContact(name, phone);
+            }
+        }
+        file.close();
+    }
+};
+
+int main() {
+    ContactBook book;
+    int choice;
+    string name, phone;
+
+    do {
+        cout << "\n📱 Contact Book Menu:\n"
+             << "1. Add Contact\n"
+             << "2. Search Contact\n"
+             << "3. Update Contact\n"
+             << "4. Delete Contact\n"
+             << "5. Display All Contacts\n"
+             << "0. Exit\n"
+             << "Enter choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1:
+                cout << "Enter name: ";
+                getline(cin, name);
+                cout << "Enter phone: ";
+                getline(cin, phone);
+                book.addContact(name, phone);
+                break;
+            case 2:
+                cout << "Enter name to search: ";
+                getline(cin, name);
+                book.searchContact(name);
+                break;
+            case 3:
+                cout << "Enter name to update: ";
+                getline(cin, name);
+                cout << "Enter new phone: ";
+                getline(cin, phone);
+                book.updateContact(name, phone);
+                break;
+            case 4:
+                cout << "Enter name to delete: ";
+                getline(cin, name);
+                book.deleteContact(name);
+                break;
+            case 5:
+                book.displayContacts();
+                break;
+            case 0:
+                cout << "👋 Goodbye!\n";
+                break;
+            default:
+                cout << "⚠️ Invalid choice.\n";
+        }
+    } 
+    while (choice != 0);
+    return 0;
+}
