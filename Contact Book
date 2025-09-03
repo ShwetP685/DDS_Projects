@@ -180,11 +180,13 @@ int main() {
                 getline(cin, phone);
                 book.addContact(name, phone);
                 break;
+
             case 2:
                 cout << "Enter name to search: ";
                 getline(cin, name);
                 book.searchContact(name);
                 break;
+
             case 3:
                 cout << "Enter name to update: ";
                 getline(cin, name);
@@ -192,17 +194,21 @@ int main() {
                 getline(cin, phone);
                 book.updateContact(name, phone);
                 break;
+
             case 4:
                 cout << "Enter name to delete: ";
                 getline(cin, name);
                 book.deleteContact(name);
                 break;
+
             case 5:
                 book.displayContacts();
                 break;
+
             case 0:
                 cout << "👋 Goodbye!\n";
                 break;
+
             default:
                 cout << "⚠️ Invalid choice.\n";
         }
