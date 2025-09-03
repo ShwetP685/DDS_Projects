@@ -1,0 +1,165 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+struct Driver {
+    string name;
+    double distance;
+    double rating;
+
+    bool operator<(const Driver& other) const {
+        if (distance == other.distance)
+            return rating < other.rating;
+        return distance > other.distance;
+    }
+};
+
+struct Rider {
+    string name;
+};
+
+struct Ride {
+    string riderName;
+    string driverName;
+    double distance;
+    double rating;
+};
+
+class RideSharingSimulator {
+private:
+    queue <Rider> riderQueue;
+    priority_queue <Driver> driverQueue;
+    vector<Ride> rideHistory;
+
+public:
+    void addDriver(const string& name, double distance, double rating) {
+        driverQueue.push({name, distance, rating});
+        cout << "🚗 Driver " << name << " added.\n";
+    }
+
+    void addRider(const string& name) {
+        riderQueue.push({name});
+        cout << "🧍 Rider " << name << " added.\n";
+    }
+
+    void dispatchRide() {
+        if (riderQueue.empty()) {
+            cout << "⚠️ No riders in queue.\n";
+            return;
+        }
+        if (driverQueue.empty()) {
+            cout << "⚠️ No drivers available.\n";
+            return;
+        }
+
+        Rider rider = riderQueue.front();
+        riderQueue.pop();
+
+        Driver driver = driverQueue.top();
+        driverQueue.pop();
+
+        rideHistory.push_back({rider.name, driver.name, driver.distance, driver.rating});
+        cout << "✅ Ride dispatched: " << rider.name << " → " << driver.name << "\n";
+    }
+
+    void showRideHistory() {
+        int riderWidth, driverWidth, distWidth, ratingWidth;
+
+        cout << "\n📐 Customize Table Layout:\n";
+        cout << "Enter column width for Rider Name: ";
+        cin >> riderWidth;
+        cout << "Enter column width for Driver Name: ";
+        cin >> driverWidth;
+        cout << "Enter column width for Distance: ";
+        cin >> distWidth;
+        cout << "Enter column width for Rating: ";
+        cin >> ratingWidth;
+
+        cout << "\n📜 Ride History:\n";
+        cout << "+" << string(riderWidth + 2, '-') << "+"
+             << string(driverWidth + 2, '-') << "+"
+             << string(distWidth + 2, '-') << "+"
+             << string(ratingWidth + 2, '-') << "+\n";
+
+        cout << "| " << setw(riderWidth) << left << "Rider"
+             << " | " << setw(driverWidth) << left << "Driver"
+             << " | " << setw(distWidth) << left << "Distance"
+             << " | " << setw(ratingWidth) << left << "Rating" << " |\n";
+
+        cout << "+" << string(riderWidth + 2, '-') << "+"
+             << string(driverWidth + 2, '-') << "+"
+             << string(distWidth + 2, '-') << "+"
+             << string(ratingWidth + 2, '-') << "+\n";
+
+        for (const auto& ride : rideHistory) {
+            cout << "| " << setw(riderWidth) << left << ride.riderName
+                 << " | " << setw(driverWidth) << left << ride.driverName
+                 << " | " << setw(distWidth) << fixed << setprecision(2) << ride.distance
+                 << " | " << setw(ratingWidth) << fixed << setprecision(1) << ride.rating << " |\n";
+        }
+
+        cout << "+" << string(riderWidth + 2, '-') << "+"
+             << string(driverWidth + 2, '-') << "+"
+             << string(distWidth + 2, '-') << "+"
+             << string(ratingWidth + 2, '-') << "+\n";
+    }
+};
+
+int main() {
+    RideSharingSimulator sim;
+    int choice;
+    string name;
+    double distance, rating;
+
+    do {
+        cout << "\n🚦 Ride-Sharing Menu:\n"
+             << "1. Add Driver\n"
+             << "2. Add Rider\n"
+             << "3. Dispatch Ride\n"
+             << "4. Show Ride History\n"
+             << "0. Exit\n"
+             << "Enter choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1:
+                cout << "Enter driver name: ";
+                getline(cin, name);
+                cout << "Enter distance from rider (km): ";
+                cin >> distance;
+                cout << "Enter driver rating (1.0 - 5.0): ";
+                cin >> rating;
+                cin.ignore();
+                sim.addDriver(name, distance, rating);
+                break;
+                
+            case 2:
+                cout << "Enter rider name: ";
+                getline(cin, name);
+                sim.addRider(name);
+                break;
+                
+            case 3:
+                sim.dispatchRide();
+                break;
+                
+            case 4:
+                sim.showRideHistory();
+                break;
+                
+            case 0:
+                cout << "👋 Exiting simulator.\n";
+                break;
+                
+            default:
+                cout << "⚠️ Invalid choice.\n";
+        }
+    } 
+    while (choice != 0);
+        return 0;
+}
